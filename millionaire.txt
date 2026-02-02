@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Millionaire Progress Widget</title>
+<style>
+body {
+  background: transparent;
+  font-family: Arial, sans-serif;
+}
+.container {
+  width: 720px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: rgba(0,0,0,0.65);
+  color: white;
+}
+.title {
+  font-size: 18px;
+  opacity: 0.85;
+}
+.amount {
+  font-size: 34px;
+  font-weight: bold;
+  color: #00ff88;
+  margin: 6px 0 10px;
+}
+.bar-bg {
+  width: 100%;
+  height: 22px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg,#00ff88,#00ffaa);
+  transition: width 0.4s linear;
+}
+.milestone {
+  margin-top: 6px;
+  font-size: 14px;
+  opacity: 0.8;
+  text-align: right;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+  <div class="title">Road to $1,000,000</div>
+  <div class="amount" id="money">$200,000</div>
+  <div class="bar-bg">
+    <div class="bar-fill" id="progress"></div>
+  </div>
+  <div class="milestone" id="milestone">Next milestone: $210,000</div>
+</div>
+
+<script>
+/* ====== CONFIGURATION ====== */
+const GOAL = 1000000;
+const YEARLY_RATE = 0.05;      // 5% annuel
+const SUB_VALUE = 1;           // $ par sub
+const DONATION_KEEP = 0.5;     // 50% après frais
+const MILESTONE_STEP = 10000;
+
+/* ====== NET WORTH INITIAL ====== */
+let netWorth = 200000;
+
+/* ====== COMPOUND CONTINUOUS ====== */
+const ratePerSecond = YEARLY_RATE / (365*24*3600);
+
+/* ====== FORMAT MONNAIE ====== */
+function money(n) {
+  return "$" + Math.floor(n).toLocaleString();
+}
+
+/* ====== UPDATE UI ====== */
+function updateUI() {
+  document.getElementById("money").innerText = money(netWorth);
+  let percent = Math.min((netWorth/GOAL)*100,100);
+  document.getElementById("progress").style.width = percent + "%";
+  let nextMilestone = Math.ceil(netWorth/MILESTONE_STEP)*MILESTONE_STEP;
+  document.getElementById("milestone").innerText = "Next milestone: " + money(nextMilestone);
+  localStorage.setItem("netWorth", netWorth);
+}
+
+/* ====== SMOOTH PASSIVE INCOME ====== */
+setInterval(() => {
+  netWorth += netWorth * ratePerSecond;
+  updateUI();
+}, 1000);
+
+/* ====== STREAMLABS EVENTS ====== */
+window.addEventListener("onEventReceived", function(obj){
+  const e = obj.detail.event;
+  if(e.type === "donation") {
+    netWorth += e.amount * DONATION_KEEP;
+  }
+  if(e.type === "subscriber") {
+    netWorth += SUB_VALUE;
+  }
+  updateUI();
+});
+
+/* ====== INIT ====== */
+updateUI();
+</script>
+</body>
+</html>
